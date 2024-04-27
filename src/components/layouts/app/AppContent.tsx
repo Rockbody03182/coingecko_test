@@ -6,9 +6,6 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router-dom';
 import routes from '../../../routes/route';
 
 const AppContent = () => {
-  const navigate = useNavigate();
-  // const { id, kind, name, rscode, setId, setKind, setName, setRsCode } = rootStore();
-
   return (
     <>
       <Suspense fallback={<div>Loading...</div>}>
