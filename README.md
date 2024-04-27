@@ -3,6 +3,4 @@
 ### 주요 환경 셋팅 🐈
 - react18
 - typescript
-- zustand (Client 상태관리)
-- React Query (Server 상태관리) - 미정
-- eslint (coding convention)
+- axios (API 통신)
