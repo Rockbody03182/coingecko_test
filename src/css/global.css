@@ -1,34 +1,79 @@
-.pentagram {    
-  position: relative;
+/* 더보기 버튼 */
+.viewmore{
+  background: #fff;
+  text-align: center;
+  width: 100%;
+  height: 40px;
+  cursor: pointer;
+}
+
+/* 테이블 */
+.thead{
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+}
+.thead li{
+  width: 100%;
+  text-align: center;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 북마크 */
+.star {
+  width: 20px;
+  height: 20px;
+  background:url('../images/star.png');
   display: inline-block;
-  width: 0px;
-  height: 0px;
-  margin: 50px 0;
-  color: #ffd67a;    
-  border-right: 80px solid transparent;
-  border-left: 80px solid transparent;
-  border-bottom: 56px  solid #ffd67a;    
-  transform: rotate(35deg);
+  background-position: center;
+  background-size: cover;
+  margin-right: 5px;
+  cursor: pointer;
 }
-  
-.pentagram::before,
-.pentagram::after{
-  content: "";
-  position: absolute;
-  width: 0px;
-  top: 0;
-  height: 0px;
-  color: #ffd67a;    
-  left: -80px;        
-  border-right: 80px solid transparent;
-  border-left: 80px solid transparent;
-  border-bottom: 56px solid #ffd67a;
+
+.star-active {
+  width: 20px;
+  height: 20px;
+  background:url('../images/star_active.png');
+  display: inline-block;
+  background-position: center;
+  background-size: cover;
+  margin-right: 5px;
+  cursor: pointer;
 }
-  
-.pentagram::before {
-  transform: rotate(71deg);
+
+/* select box */
+.select-wrap{
+  display: flex;
+  width: 100%;
+  justify-content: right;
+  align-items: center;
+  height: 50px;
 }
-  
-.pentagram::after {
-  transform: rotate(-71deg);
+.select-wrap select {
+  margin-right: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+/*토스트 메시지*/
+.toast{
+  width: 200px;
+  opacity: 100%;
+  bottom: 50px;
+  position: fixed;
+  /* opacity: 0; */
+  /* bottom: -100px; */
+  left: 50%;
+  transform: translate(-50%,0);
+  padding: 10px 50px;
+  background: rgba(0, 0, 0, 0.70);
+  border-radius: 100px;
+  color: #fff;
+  box-shadow: 3px 4px 11px 0px #00000040;
+  transition: all 0.5s;
+  text-align: center;
 }

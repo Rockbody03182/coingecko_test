@@ -4,4 +4,5 @@
 - react18
 - typescript
 - axios (API 통신)
-- uuid (범용 고유 식별자)
+- React Query (Server 상태관리)
+- zustand
