@@ -1,35 +1,31 @@
 import { ChangeEvent, useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { virtualAssetList } from '../../apis/common/index';
-
-interface Coin {
-  id: string;
-  symbol: string;
-  name: string;
-  current_price: number;
-  price_change_percentage_1h_in_currency: number;
-  price_change_percentage_24h_in_currency: number;
-  price_change_percentage_7d_in_currency: number;
-  market_cap_change_24h: number;
-}
-export interface ListParams {
-  vsCurrency: string;
-  currentPage : number;
-  perPage : number;
-}
+import {bookmarkStore} from '../../common/states/Coins.store';
+import Table from '../common/table/Table';
+import { Coin, ListParams } from '../../apis/common/interface';
+import { useLocation } from 'react-router-dom';
 
 export default function List() {
+  const location = useLocation();
   const [bookId, setBookId] = useState('');
   const [showToast, setShowToast] = useState(false);
+  const [listData, setListData] = useState<Coin[]>([]); // list 변수를 listData로 변경
+  const queryClient = useQueryClient();
+  const {bookmarkIds, setBookmarkIds} = bookmarkStore(); // 여러 개의 북마크 아이디를 저장하는 상태로 변경
   const [params, setParams] = useState<ListParams>({
+    path: location.pathname, 
     vsCurrency: 'krw',
     currentPage:1, // 현재 페이지
     perPage:50 // 페이지당 보여지는 갯수
   })
 
-  const [listData, setListData] = useState<Coin[]>([]); // list 변수를 listData로 변경
-
-  const queryClient = useQueryClient();
+  // 쿠키생성
+  function setCookie(name: string, value: string, days: number) {
+    const expires = new Date();
+    expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+  }
 
   const { data: newData = [], isLoading, isError } = useQuery<Coin[], Error>(
     ['virtualAssetList', params],
@@ -46,7 +42,11 @@ export default function List() {
 
   useEffect(() => {
     if (newData.length > 0) {
-      console.log(newData.length);
+      const cookieBookmarkIds = document.cookie.replace(/(?:(?:^|.*;\s*)bookmarkIds\s*=\s*([^;]*).*$)|^.*$/, '$1');
+      if (cookieBookmarkIds) {
+        const parsedBookmarkIds = JSON.parse(cookieBookmarkIds);
+        setBookmarkIds(parsedBookmarkIds);
+      }
       setListData(prevListData => [...prevListData, ...newData]);
     }
   }, [newData]);
@@ -59,8 +59,6 @@ export default function List() {
   const handleSelectChange = (event: ChangeEvent<HTMLSelectElement>) => {
     setListData([]);
     const { name, value } = event.target;
-    console.log(`...name ${name}`);
-    console.log(`...value ${value}`);
     if(name !== 'site'){
       setParams(prevParams => ({
         ...prevParams,
@@ -69,39 +67,31 @@ export default function List() {
     }
   };
 
-  // 금액 단위 변환
-  const formatCurrency = (value: number) => {
-    const formattedValue = new Intl.NumberFormat('en-US', {
-      maximumFractionDigits: value % 1 === 0 ? 0 : 2,
-    }).format(value);
-    return formattedValue.replace(/\.00$/, '');
-  };
-
-  // 퍼센트 단위 변환
-  const formatPercentage = (value: number) => {
-    if (isNaN(value) || value === null) {
-      return '-';
-    }
-    const isInteger = Number.isInteger(value);
-    console.log(value);
-    const formattedValue =
-      value > 0 ? (
-        <span style={{ color: 'red' }}>+{value.toFixed(2)}%</span>
-      ) : (
-        isInteger ? <span style={{ color: 'blue' }}>{value}%</span> 
-        : <span style={{ color: 'blue' }}>{value.toFixed(2)}%</span>
-      );
-    return formattedValue;
-  };
-
   // 북마크추가
   const handleBookmarkClick = (name: string) => {
     setBookId(name)
-    // 북마크가 추가되었다는 토스트 메시지를 띄웁니다.
+
+    // 북마크 아이디 목록에 이미 존재하는지 확인
+    const isAlreadyBookmarked = bookmarkIds.includes(name);
+
+    // 이미 북마크된 경우 제외하고, 아닌 경우 추가
+    const updatedBookmarkIds = isAlreadyBookmarked
+      ? bookmarkIds.filter((bookId) => bookId !== name)
+      : [...bookmarkIds, name];
+
+    // 업데이트된 북마크 아이디 목록을 설정
+    setBookmarkIds(updatedBookmarkIds);
+
+    // 북마크가 추가되었음을 알리는 토스트 메시지를 표시
     setShowToast(true);
+
+    // 쿠키에 북마크 정보를 저장
+    setCookie('bookmarkIds', JSON.stringify(updatedBookmarkIds), 30);
+
+    // 3초 후에 토스트 메시지 종료
     setTimeout(() => {
       setShowToast(false);
-    }, 3000); // 3초 후에 토스트 메시지를 숨깁니다.
+    }, 3000);
   };
 
   return (
@@ -137,44 +127,33 @@ export default function List() {
         ) :  (
           listData.map((item, index) => (
             <div key={`list-key-${index}`}>
-               <ul className="thead">
-                  <li>
-                    <span className="star" onClick={() => handleBookmarkClick(item.id)}></span> {item.name}
-                  </li>
-                  <li>{item.symbol}</li>
-                  <li>
-                    {params.vsCurrency === 'krw' ? '₩' : '$'}
-                    {formatCurrency(item.current_price)}
-                  </li>
-                  <li>{formatPercentage(item.price_change_percentage_1h_in_currency)}</li>
-                  <li>{formatPercentage(item.price_change_percentage_24h_in_currency)}</li>
-                  <li>{formatPercentage(item.price_change_percentage_7d_in_currency)}</li>
-                  <li>
-                    {params.vsCurrency === 'krw' ? '₩' : '$'}
-                    {formatCurrency(item.market_cap_change_24h)}
-                  </li>
-                </ul>
+              <Table
+                item={item}
+                handleBookmarkClick={handleBookmarkClick}
+                params={params}
+              />
             </div>
           ))
         )}
       </div>
+
       {/* 토스트 메시지 */}
-      {showToast && (
-        <div className="toast">
-          북마크가 추가되었습니다 {bookId}
-        </div>
-      )}
-      <button
-        className="viewmore"
-        onClick={() =>
-          setParams(prevParams => ({
-            ...prevParams,
-            currentPage: prevParams.currentPage + 1
-          }))
-        }
-        >
-        + 더보기
-      </button>
+      {showToast && (<div className="toast">북마크가 추가되었습니다 {bookId}</div>)}
+      
+      {/* 더보기 버튼 */}
+      {listData.length >= params.perPage && 
+            <button
+            className="viewmore"
+            onClick={() =>
+              setParams(prevParams => ({
+                ...prevParams,
+                currentPage: prevParams.currentPage + 1
+              }))
+            }
+            >
+            + 더보기
+          </button>
+      }
     </div>
 
     </>
